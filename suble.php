@@ -285,8 +285,14 @@ function suble_UnsuspendAccount(array $params)
 function suble_TerminateAccount(array $params)
 {
     try {
-        // Call the service's terminate function, using the values provided by
-        // WHMCS in `$params`.
+        $sessionParsed = json_decode(
+            HTTPRequester::HTTPPost(
+                "https://api.suble.io/projects/".$params["configoption3"]."/reseller/delete/vm/".$params["accountid"],
+                $params["configoption4"]
+            ),
+            true
+        );
+        return 'success';
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
