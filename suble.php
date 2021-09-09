@@ -90,11 +90,17 @@ function suble_ConfigOptions()
 {
     return array(
         //Suble VM Package
+        'Type' => array(
+            'Type' => 'dropdown',
+            'Options' => 'Virtual_Machine,Floating_IP,Network',
+            'Default' => 'Virtual_Machine',
+            'Description' => 'Product Type',
+        ),
         'Package' => array(
             'Type' => 'text',
             'Size' => '25',
             'Default' => 'micro',
-            'Description' => 'Suble.io Package',
+            'Description' => 'Product Package',
         ),
         //Reseller Id
         'Reseller ID' => array(
@@ -148,7 +154,27 @@ function suble_CreateAccount(array $params)
         //     ...
         // )
         // ```
-        $response = HTTPRequester::HTTPPost("https://api.suble.io/whmcs", $params);
+        //if($param["configoption0"] == "Virtual_Machine") {
+            $sessionParsed = json_decode(
+                HTTPRequester::HTTPPost(
+                    "https://api.suble.io/projects/".$params["configoption3"]."/reseller/order/vm",
+                    array(
+                        "productid" => $params["accountid"],
+                        "package" => $params["configoption2"],
+                        "os" => "".$params["customfields"]["os"],
+                        "productname" => "".$params["customfields"]["name"],
+
+                        "name" => $params["clientsdetails"]["fullname"],
+                        "email" => $params["clientsdetails"]["email"],
+                        "uuid" => $params["clientsdetails"]["uuid"],
+
+                    ),
+                    $params["configoption4"]
+                ),
+                true
+            );
+            return 'success';
+        //}
 
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
@@ -739,33 +765,11 @@ function suble_AdminSingleSignOn(array $params)
  */
 function suble_ClientArea(array $params)
 {
-    // Determine the requested action and set service call parameters based on
-    // the action.
-    $requestedAction = isset($_REQUEST['customAction']) ? $_REQUEST['customAction'] : '';
-
-    //$Htmlresponse = HTTPRequester::HTTPPost("https://api.suble.io/whmcs", [$params["clientsdetails"]["uuid"]]);
-
-    if ($requestedAction == 'manage') {
-        $serviceAction = 'get_usage';
-        $templateFile = 'templates/manage.tpl';
-    } else {
-        $serviceAction = 'get_stats';
-        $templateFile = 'templates/overview.tpl';
-    }
-
     try {
-        // Call the service's function based on the request action, using the
-        // values provided by WHMCS in `$params`.
-        $response = array();
-
-        $extraVariable1 = 'abc';
-        $extraVariable2 = '123';
-        //$authLink = "https://api.suble.io/whmcs?reseller=" + $params["configoption2"] + "&uid=" + $params["clientsdetails"]["uuid"];
-        $sessionParsed = json_decode(HTTPRequester::HTTPGet("https://api.suble.io/projects/".$params["configoption2"]."/reseller/users/".$params["clientsdetails"]["uuid"]."/session", array(), $params["configoption2"]), true);
-        $authLink = "https://".$sessionParsed->domain."/auth?auth=".$sessionParsed->token;
-
+        $sessionParsed = json_decode(HTTPRequester::HTTPGet("https://api.suble.io/projects/".$params["configoption3"]."/reseller/users/".$params["clientsdetails"]["uuid"]."/session", array(), $params["configoption4"]), true);
+        $authLink = "https://".$sessionParsed["domain"]."/auth?auth=".$sessionParsed["token"];
         return array(
-            'templatefile' => $templateFile,
+            'templatefile' => 'templates/overview.tpl',
             'vars' => array(
                 'authLink' => $authLink
             ),
@@ -802,9 +806,10 @@ class HTTPRequester {
         $query = http_build_query($params); 
         $ch    = curl_init($url.'?'.$query);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HEADER, true);
-        $header[] = 'Authorization: Bearer ' . $auth;
-        curl_setopt($crl, CURLOPT_HTTPHEADER, $header);
+
+        $headers = array('Authorization: Bearer '.$auth, 'Content-type: application/json');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
         $response = curl_exec($ch);
         curl_close($ch);
         return $response;
@@ -815,14 +820,15 @@ class HTTPRequester {
      * @param       array $params
      * @return      HTTP-Response body or an empty string if the request fails or is empty
      */
-    public static function HTTPPost($url, array $params) {
-        $query = http_build_query($params);
+    public static function HTTPPost($url, array $params, string $auth) {
+        $query = http_build_query(json_encode($params));
         $ch    = curl_init();
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HEADER, false);
+        $headers = array('Authorization: Bearer '.$auth, 'Content-type: application/json');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
         $response = curl_exec($ch);
         curl_close($ch);
         return $response;
