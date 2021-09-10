@@ -191,16 +191,6 @@ function suble_CreateAccount(array $params)
 
     return 'success';
 }
-function httpPost($url, $data)
-{
-    $curl = curl_init($url);
-    curl_setopt($curl, CURLOPT_POST, true);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    $response = curl_exec($curl);
-    curl_close($curl);
-    return $response;
-}
 
 /**
  * Suspend an instance of a product/service.
@@ -304,52 +294,6 @@ function suble_TerminateAccount(array $params)
 }
 
 /**
- * Change the password for an instance of a product/service.
- *
- * Called when a password change is requested. This can occur either due to a
- * client requesting it via the client area or an admin requesting it from the
- * admin side.
- *
- * This option is only available to client end users when the product is in an
- * active status.
- *
- * @param array $params common module parameters
- *
- * @see https://developers.whmcs.com/provisioning-modules/module-parameters/
- *
- * @return string "success" or an error message
- */
-function suble_ChangePassword(array $params)
-{
-    try {
-        // Call the service's change password function, using the values
-        // provided by WHMCS in `$params`.
-        //
-        // A sample `$params` array may be defined as:
-        //
-        // ```
-        // array(
-        //     'username' => 'The service username',
-        //     'password' => 'The new service password',
-        // )
-        // ```
-    } catch (Exception $e) {
-        // Record the error in WHMCS's module log.
-        logModuleCall(
-            'suble',
-            __FUNCTION__,
-            $params,
-            $e->getMessage(),
-            $e->getTraceAsString()
-        );
-
-        return $e->getMessage();
-    }
-
-    return 'success';
-}
-
-/**
  * Upgrade or downgrade an instance of a product/service.
  *
  * Called to apply any change in product assignment or parameters. It
@@ -369,21 +313,19 @@ function suble_ChangePackage(array $params)
 {
     $err = "success";
     try {
-        // Call the service's change password function, using the values
-        // provided by WHMCS in `$params`.
-        //
-        // A sample `$params` array may be defined as:
-        //
-        // ```
-        // array(
-        //     'username' => 'The service username',
-        //     'configoption1' => 'The new service disk space',
-        //     'configoption3' => 'Whether or not to enable FTP',
-        // )
-        // ```
-        $Htmlresponse = HTTPRequester::HTTPPost("https://api.suble.io/whmcs", $params);
-        $err = "Not possible";
-        return "Not possible!";
+        $responseData = json_decode(
+            HTTPRequester::HTTPPost(
+                "https://api.suble.io/projects/".$params["configoption3"]."/reseller/products/".$params["accountid"]."/package",
+                array(
+                    "package" => $params["configoption2"]
+                ),
+                $params["configoption4"]
+            ),
+            true
+        );
+        if(property_exists($responseData, "error")) {
+            $err = $responseData["error"];
+        }
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
