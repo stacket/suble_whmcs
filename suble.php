@@ -138,23 +138,7 @@ function suble_ConfigOptions()
 function suble_CreateAccount(array $params)
 {
     try {
-        // Call the service's provisioning function, using the values provided
-        // by WHMCS in `$params`.
-        //
-        // A sample `$params` array may be defined as:
-        //
-        // ```
-        // array(
-        //     'domain' => 'The domain of the service to provision',
-        //     'username' => 'The username to access the new service',
-        //     'password' => 'The password to access the new service',
-        //     'configoption1' => 'The amount of disk space to provision',
-        //     'configoption2' => 'The new services secret key',
-        //     'configoption3' => 'Whether or not to enable FTP',
-        //     ...
-        // )
-        // ```
-        //if($param["configoption0"] == "Virtual_Machine") {
+       if($param["configoption1"] == "Virtual_Machine") {
             $sessionParsed = json_decode(
                 HTTPRequester::HTTPPost(
                     "https://api.suble.io/projects/".$params["configoption3"]."/reseller/order/vm",
@@ -167,14 +151,13 @@ function suble_CreateAccount(array $params)
                         "name" => $params["clientsdetails"]["fullname"],
                         "email" => $params["clientsdetails"]["email"],
                         "uuid" => $params["clientsdetails"]["uuid"],
-
                     ),
                     $params["configoption4"]
                 ),
                 true
             );
             return 'success';
-        //}
+        }
 
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
