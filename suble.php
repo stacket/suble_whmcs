@@ -207,9 +207,21 @@ function suble_CreateAccount(array $params)
  */
 function suble_SuspendAccount(array $params)
 {
+    $err = "success";
     try {
         // Call the service's suspend function, using the values provided by
         // WHMCS in `$params`.
+        $responseData = json_decode(
+            HTTPRequester::HTTPPost(
+                "https://api.suble.io/projects/".$params["configoption3"]."/reseller/products/".$params["accountid"]."/suspend",
+                array(),
+                $params["configoption4"]
+            ),
+            true
+        );
+        if(property_exists($responseData, "error")) {
+            $err = $responseData["error"];
+        }
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -220,10 +232,10 @@ function suble_SuspendAccount(array $params)
             $e->getTraceAsString()
         );
 
-        return $e->getMessage();
+        $err = $e->getMessage();
     }
 
-    return 'success';
+    return $err;
 }
 
 /**
@@ -241,9 +253,21 @@ function suble_SuspendAccount(array $params)
  */
 function suble_UnsuspendAccount(array $params)
 {
+    $err = "success";
     try {
-        // Call the service's unsuspend function, using the values provided by
+        // Call the service's suspend function, using the values provided by
         // WHMCS in `$params`.
+        $responseData = json_decode(
+            HTTPRequester::HTTPDelete(
+                "https://api.suble.io/projects/".$params["configoption3"]."/reseller/products/".$params["accountid"]."/suspend",
+                array(),
+                $params["configoption4"]
+            ),
+            true
+        );
+        if(property_exists($responseData, "error")) {
+            $err = $responseData["error"];
+        }
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -254,10 +278,10 @@ function suble_UnsuspendAccount(array $params)
             $e->getTraceAsString()
         );
 
-        return $e->getMessage();
+        $err = $e->getMessage();
     }
 
-    return 'success';
+    return $err;
 }
 
 /**
@@ -806,7 +830,7 @@ class HTTPRequester {
         $query = \http_build_query($params);
         $ch    = \curl_init();
         \curl_setopt($ch, \CURLOPT_RETURNTRANSFER, true);
-        
+
         $headers = array('Authorization: Bearer '.$auth, 'Content-type: application/json');
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
