@@ -781,11 +781,14 @@ class HTTPRequester {
      * @param       array $params
      * @return      HTTP-Response body or an empty string if the request fails or is empty
      */
-    public static function HTTPPut($url, array $params) {
+    public static function HTTPPut($url, array $params, string $auth) {
         $query = \http_build_query($params);
         $ch    = \curl_init();
         \curl_setopt($ch, \CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, \CURLOPT_HEADER, false);
+
+        $headers = array('Authorization: Bearer '.$auth, 'Content-type: application/json');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
         \curl_setopt($ch, \CURLOPT_URL, $url);
         \curl_setopt($ch, \CURLOPT_CUSTOMREQUEST, 'PUT');
         \curl_setopt($ch, \CURLOPT_POSTFIELDS, $query);
@@ -799,11 +802,14 @@ class HTTPRequester {
      * @param    array $params
      * @return   HTTP-Response body or an empty string if the request fails or is empty
      */
-    public static function HTTPDelete($url, array $params) {
+    public static function HTTPDelete($url, array $params, string $auth) {
         $query = \http_build_query($params);
         $ch    = \curl_init();
         \curl_setopt($ch, \CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, \CURLOPT_HEADER, false);
+        
+        $headers = array('Authorization: Bearer '.$auth, 'Content-type: application/json');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
         \curl_setopt($ch, \CURLOPT_URL, $url);
         \curl_setopt($ch, \CURLOPT_CUSTOMREQUEST, 'DELETE');
         \curl_setopt($ch, \CURLOPT_POSTFIELDS, $query);
