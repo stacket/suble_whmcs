@@ -138,23 +138,7 @@ function suble_ConfigOptions()
 function suble_CreateAccount(array $params)
 {
     try {
-        // Call the service's provisioning function, using the values provided
-        // by WHMCS in `$params`.
-        //
-        // A sample `$params` array may be defined as:
-        //
-        // ```
-        // array(
-        //     'domain' => 'The domain of the service to provision',
-        //     'username' => 'The username to access the new service',
-        //     'password' => 'The password to access the new service',
-        //     'configoption1' => 'The amount of disk space to provision',
-        //     'configoption2' => 'The new services secret key',
-        //     'configoption3' => 'Whether or not to enable FTP',
-        //     ...
-        // )
-        // ```
-        //if($param["configoption0"] == "Virtual_Machine") {
+       if($param["configoption1"] == "Virtual_Machine") {
             $sessionParsed = json_decode(
                 HTTPRequester::HTTPPost(
                     "https://api.suble.io/projects/".$params["configoption3"]."/reseller/order/vm",
@@ -167,14 +151,13 @@ function suble_CreateAccount(array $params)
                         "name" => $params["clientsdetails"]["fullname"],
                         "email" => $params["clientsdetails"]["email"],
                         "uuid" => $params["clientsdetails"]["uuid"],
-
                     ),
                     $params["configoption4"]
                 ),
                 true
             );
             return 'success';
-        //}
+        }
 
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
@@ -190,16 +173,6 @@ function suble_CreateAccount(array $params)
     }
 
     return 'success';
-}
-function httpPost($url, $data)
-{
-    $curl = curl_init($url);
-    curl_setopt($curl, CURLOPT_POST, true);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($data));
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    $response = curl_exec($curl);
-    curl_close($curl);
-    return $response;
 }
 
 /**
@@ -217,9 +190,21 @@ function httpPost($url, $data)
  */
 function suble_SuspendAccount(array $params)
 {
+    $err = "success";
     try {
         // Call the service's suspend function, using the values provided by
         // WHMCS in `$params`.
+        $responseData = json_decode(
+            HTTPRequester::HTTPPost(
+                "https://api.suble.io/projects/".$params["configoption3"]."/reseller/products/".$params["accountid"]."/suspend",
+                array(),
+                $params["configoption4"]
+            ),
+            true
+        );
+        if(property_exists($responseData, "error")) {
+            $err = $responseData["error"];
+        }
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -230,10 +215,10 @@ function suble_SuspendAccount(array $params)
             $e->getTraceAsString()
         );
 
-        return $e->getMessage();
+        $err = $e->getMessage();
     }
 
-    return 'success';
+    return $err;
 }
 
 /**
@@ -251,9 +236,19 @@ function suble_SuspendAccount(array $params)
  */
 function suble_UnsuspendAccount(array $params)
 {
+    $err = "success";
     try {
-        // Call the service's unsuspend function, using the values provided by
-        // WHMCS in `$params`.
+        $responseData = json_decode(
+            HTTPRequester::HTTPDelete(
+                "https://api.suble.io/projects/".$params["configoption3"]."/reseller/products/".$params["accountid"]."/suspend",
+                array(),
+                $params["configoption4"]
+            ),
+            true
+        );
+        if(property_exists($responseData, "error")) {
+            $err = $responseData["error"];
+        }
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -264,10 +259,10 @@ function suble_UnsuspendAccount(array $params)
             $e->getTraceAsString()
         );
 
-        return $e->getMessage();
+        $err = $e->getMessage();
     }
 
-    return 'success';
+    return $err;
 }
 
 /**
@@ -309,52 +304,6 @@ function suble_TerminateAccount(array $params)
 }
 
 /**
- * Change the password for an instance of a product/service.
- *
- * Called when a password change is requested. This can occur either due to a
- * client requesting it via the client area or an admin requesting it from the
- * admin side.
- *
- * This option is only available to client end users when the product is in an
- * active status.
- *
- * @param array $params common module parameters
- *
- * @see https://developers.whmcs.com/provisioning-modules/module-parameters/
- *
- * @return string "success" or an error message
- */
-function suble_ChangePassword(array $params)
-{
-    try {
-        // Call the service's change password function, using the values
-        // provided by WHMCS in `$params`.
-        //
-        // A sample `$params` array may be defined as:
-        //
-        // ```
-        // array(
-        //     'username' => 'The service username',
-        //     'password' => 'The new service password',
-        // )
-        // ```
-    } catch (Exception $e) {
-        // Record the error in WHMCS's module log.
-        logModuleCall(
-            'suble',
-            __FUNCTION__,
-            $params,
-            $e->getMessage(),
-            $e->getTraceAsString()
-        );
-
-        return $e->getMessage();
-    }
-
-    return 'success';
-}
-
-/**
  * Upgrade or downgrade an instance of a product/service.
  *
  * Called to apply any change in product assignment or parameters. It
@@ -374,21 +323,19 @@ function suble_ChangePackage(array $params)
 {
     $err = "success";
     try {
-        // Call the service's change password function, using the values
-        // provided by WHMCS in `$params`.
-        //
-        // A sample `$params` array may be defined as:
-        //
-        // ```
-        // array(
-        //     'username' => 'The service username',
-        //     'configoption1' => 'The new service disk space',
-        //     'configoption3' => 'Whether or not to enable FTP',
-        // )
-        // ```
-        $Htmlresponse = HTTPRequester::HTTPPost("https://api.suble.io/whmcs", $params);
-        $err = "Not possible";
-        return "Not possible!";
+        $responseData = json_decode(
+            HTTPRequester::HTTPPost(
+                "https://api.suble.io/projects/".$params["configoption3"]."/reseller/products/".$params["accountid"]."/package",
+                array(
+                    "package" => $params["configoption2"]
+                ),
+                $params["configoption4"]
+            ),
+            true
+        );
+        if(property_exists($responseData, "error")) {
+            $err = $responseData["error"];
+        }
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
         logModuleCall(
@@ -447,295 +394,6 @@ function suble_TestConnection(array $params)
         'success' => $success,
         'error' => $errorMsg,
     );
-}
-
-/**
- * Additional actions an admin user can invoke.
- *
- * Define additional actions that an admin user can perform for an
- * instance of a product/service.
- *
- * @see suble_buttonOneFunction()
- *
- * @return array
- */
-function suble_AdminCustomButtonArray()
-{
-    return array(
-        "Button 1 Display Value" => "buttonOneFunction",
-        "Button 2 Display Value" => "buttonTwoFunction",
-    );
-}
-
-/**
- * Additional actions a client user can invoke.
- *
- * Define additional actions a client user can perform for an instance of a
- * product/service.
- *
- * Any actions you define here will be automatically displayed in the available
- * list of actions within the client area.
- *
- * @return array
- */
-function suble_ClientAreaCustomButtonArray()
-{
-    return array(
-        "Action 1 Display Value" => "actionOneFunction",
-        "Action 2 Display Value" => "actionTwoFunction",
-    );
-}
-
-/**
- * Custom function for performing an additional action.
- *
- * You can define an unlimited number of custom functions in this way.
- *
- * Similar to all other module call functions, they should either return
- * 'success' or an error message to be displayed.
- *
- * @param array $params common module parameters
- *
- * @see https://developers.whmcs.com/provisioning-modules/module-parameters/
- * @see suble_AdminCustomButtonArray()
- *
- * @return string "success" or an error message
- */
-function suble_buttonOneFunction(array $params)
-{
-    try {
-        // Call the service's function, using the values provided by WHMCS in
-        // `$params`.
-    } catch (Exception $e) {
-        // Record the error in WHMCS's module log.
-        logModuleCall(
-            'suble',
-            __FUNCTION__,
-            $params,
-            $e->getMessage(),
-            $e->getTraceAsString()
-        );
-
-        return $e->getMessage();
-    }
-
-    return 'success';
-}
-
-/**
- * Custom function for performing an additional action.
- *
- * You can define an unlimited number of custom functions in this way.
- *
- * Similar to all other module call functions, they should either return
- * 'success' or an error message to be displayed.
- *
- * @param array $params common module parameters
- *
- * @see https://developers.whmcs.com/provisioning-modules/module-parameters/
- * @see suble_ClientAreaCustomButtonArray()
- *
- * @return string "success" or an error message
- */
-function suble_actionOneFunction(array $params)
-{
-    try {
-        // Call the service's function, using the values provided by WHMCS in
-        // `$params`.
-    } catch (Exception $e) {
-        // Record the error in WHMCS's module log.
-        logModuleCall(
-            'suble',
-            __FUNCTION__,
-            $params,
-            $e->getMessage(),
-            $e->getTraceAsString()
-        );
-
-        return $e->getMessage();
-    }
-
-    return 'success';
-}
-
-/**
- * Admin services tab additional fields.
- *
- * Define additional rows and fields to be displayed in the admin area service
- * information and management page within the clients profile.
- *
- * Supports an unlimited number of additional field labels and content of any
- * type to output.
- *
- * @param array $params common module parameters
- *
- * @see https://developers.whmcs.com/provisioning-modules/module-parameters/
- * @see suble_AdminServicesTabFieldsSave()
- *
- * @return array
- */
-function suble_AdminServicesTabFields(array $params)
-{
-    try {
-        // Call the service's function, using the values provided by WHMCS in
-        // `$params`.
-        $response = array();
-
-        // Return an array based on the function's response.
-        return array(
-            'Number of Apples' => (int) $response['numApples'],
-            'Number of Oranges' => (int) $response['numOranges'],
-            'Last Access Date' => date("Y-m-d H:i:s", $response['lastLoginTimestamp']),
-            'Something Editable' => '<input type="hidden" name="suble_original_uniquefieldname" '
-                . 'value="' . htmlspecialchars($response['textvalue']) . '" />'
-                . '<input type="text" name="suble_uniquefieldname"'
-                . 'value="' . htmlspecialchars($response['textvalue']) . '" />',
-        );
-    } catch (Exception $e) {
-        // Record the error in WHMCS's module log.
-        logModuleCall(
-            'suble',
-            __FUNCTION__,
-            $params,
-            $e->getMessage(),
-            $e->getTraceAsString()
-        );
-
-        // In an error condition, simply return no additional fields to display.
-    }
-
-    return array();
-}
-
-/**
- * Execute actions upon save of an instance of a product/service.
- *
- * Use to perform any required actions upon the submission of the admin area
- * product management form.
- *
- * It can also be used in conjunction with the AdminServicesTabFields function
- * to handle values submitted in any custom fields which is demonstrated here.
- *
- * @param array $params common module parameters
- *
- * @see https://developers.whmcs.com/provisioning-modules/module-parameters/
- * @see suble_AdminServicesTabFields()
- */
-function suble_AdminServicesTabFieldsSave(array $params)
-{
-    // Fetch form submission variables.
-    $originalFieldValue = isset($_REQUEST['suble_original_uniquefieldname'])
-        ? $_REQUEST['suble_original_uniquefieldname']
-        : '';
-
-    $newFieldValue = isset($_REQUEST['suble_uniquefieldname'])
-        ? $_REQUEST['suble_uniquefieldname']
-        : '';
-
-    // Look for a change in value to avoid making unnecessary service calls.
-    if ($originalFieldValue != $newFieldValue) {
-        try {
-            // Call the service's function, using the values provided by WHMCS
-            // in `$params`.
-        } catch (Exception $e) {
-            // Record the error in WHMCS's module log.
-            logModuleCall(
-                'suble',
-                __FUNCTION__,
-                $params,
-                $e->getMessage(),
-                $e->getTraceAsString()
-            );
-
-            // Otherwise, error conditions are not supported in this operation.
-        }
-    }
-}
-
-/**
- * Perform single sign-on for a given instance of a product/service.
- *
- * Called when single sign-on is requested for an instance of a product/service.
- *
- * When successful, returns a URL to which the user should be redirected.
- *
- * @param array $params common module parameters
- *
- * @see https://developers.whmcs.com/provisioning-modules/module-parameters/
- *
- * @return array
- */
-function suble_ServiceSingleSignOn(array $params)
-{
-    try {
-        // Call the service's single sign-on token retrieval function, using the
-        // values provided by WHMCS in `$params`.
-        $response = array();
-
-        return array(
-            'success' => true,
-            'redirectTo' => $response['redirectUrl'],
-        );
-    } catch (Exception $e) {
-        // Record the error in WHMCS's module log.
-        logModuleCall(
-            'suble',
-            __FUNCTION__,
-            $params,
-            $e->getMessage(),
-            $e->getTraceAsString()
-        );
-
-        return array(
-            'success' => false,
-            'errorMsg' => $e->getMessage(),
-        );
-    }
-}
-
-/**
- * Perform single sign-on for a server.
- *
- * Called when single sign-on is requested for a server assigned to the module.
- *
- * This differs from ServiceSingleSignOn in that it relates to a server
- * instance within the admin area, as opposed to a single client instance of a
- * product/service.
- *
- * When successful, returns a URL to which the user should be redirected to.
- *
- * @param array $params common module parameters
- *
- * @see https://developers.whmcs.com/provisioning-modules/module-parameters/
- *
- * @return array
- */
-function suble_AdminSingleSignOn(array $params)
-{
-    try {
-        // Call the service's single sign-on admin token retrieval function,
-        // using the values provided by WHMCS in `$params`.
-        $response = array();
-
-        return array(
-            'success' => true,
-            'redirectTo' => $response['redirectUrl'],
-        );
-    } catch (Exception $e) {
-        // Record the error in WHMCS's module log.
-        logModuleCall(
-            'suble',
-            __FUNCTION__,
-            $params,
-            $e->getMessage(),
-            $e->getTraceAsString()
-        );
-
-        return array(
-            'success' => false,
-            'errorMsg' => $e->getMessage(),
-        );
-    }
 }
 
 /**
@@ -844,11 +502,14 @@ class HTTPRequester {
      * @param       array $params
      * @return      HTTP-Response body or an empty string if the request fails or is empty
      */
-    public static function HTTPPut($url, array $params) {
+    public static function HTTPPut($url, array $params, string $auth) {
         $query = \http_build_query($params);
         $ch    = \curl_init();
         \curl_setopt($ch, \CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, \CURLOPT_HEADER, false);
+
+        $headers = array('Authorization: Bearer '.$auth, 'Content-type: application/json');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
         \curl_setopt($ch, \CURLOPT_URL, $url);
         \curl_setopt($ch, \CURLOPT_CUSTOMREQUEST, 'PUT');
         \curl_setopt($ch, \CURLOPT_POSTFIELDS, $query);
@@ -862,11 +523,14 @@ class HTTPRequester {
      * @param    array $params
      * @return   HTTP-Response body or an empty string if the request fails or is empty
      */
-    public static function HTTPDelete($url, array $params) {
+    public static function HTTPDelete($url, array $params, string $auth) {
         $query = \http_build_query($params);
         $ch    = \curl_init();
         \curl_setopt($ch, \CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, \CURLOPT_HEADER, false);
+
+        $headers = array('Authorization: Bearer '.$auth, 'Content-type: application/json');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
         \curl_setopt($ch, \CURLOPT_URL, $url);
         \curl_setopt($ch, \CURLOPT_CUSTOMREQUEST, 'DELETE');
         \curl_setopt($ch, \CURLOPT_POSTFIELDS, $query);
