@@ -55,7 +55,7 @@ function suble_MetaData()
     return array(
         'DisplayName' => 'Suble.io',
         'APIVersion' => '1.1', // Use API Version 1.1
-        'RequiresServer' => false, // Set true if module requires a server to work
+        'RequiresServer' => true, // Set true if module requires a server to work
         'DefaultNonSSLPort' => '1111', // Default Non-SSL Connection Port
         'DefaultSSLPort' => '1112', // Default SSL Connection Port
         'ServiceSingleSignOnLabel' => 'Login to Panel as User',
