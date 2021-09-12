@@ -138,7 +138,7 @@ function suble_ConfigOptions()
 function suble_CreateAccount(array $params)
 {
     try {
-       if($param["configoption1"] == "Virtual_Machine") {
+       //if($param["configoption1"] == "Virtual_Machine") {
             $sessionParsed = json_decode(
                 HTTPRequester::HTTPPost(
                     "https://api.suble.io/projects/".$params["configoption3"]."/reseller/order/vm",
@@ -157,7 +157,7 @@ function suble_CreateAccount(array $params)
                 true
             );
             return 'success';
-        }
+       // }
 
     } catch (Exception $e) {
         // Record the error in WHMCS's module log.
