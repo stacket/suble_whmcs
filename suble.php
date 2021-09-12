@@ -286,8 +286,8 @@ function suble_TerminateAccount(array $params)
 {
     try {
         $sessionParsed = json_decode(
-            HTTPRequester::HTTPPost(
-                "https://api.suble.io/projects/".$params["configoption3"]."/reseller/delete/vm/".$params["accountid"],
+            HTTPRequester::HTTPDelete(
+                "https://api.suble.io/projects/".$params["configoption3"]."/reseller/products/".$params["accountid"],
                 $params["configoption4"]
             ),
             true
@@ -302,7 +302,6 @@ function suble_TerminateAccount(array $params)
             $e->getMessage(),
             $e->getTraceAsString()
         );
-
         return $e->getMessage();
     }
 
