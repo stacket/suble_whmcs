@@ -3,6 +3,12 @@
 ## Create a reseller project on Suble.io
 ![image](https://user-images.githubusercontent.com/71713670/132988668-ac5798ed-012c-4b4f-b402-c5250e327ddd.png)
 
+## Fill out reseller details
+![image](https://user-images.githubusercontent.com/71713670/132989450-19c60ece-cf8e-40d7-af95-5e8833cf5cde.png)
+
+## Create DNS records on CloudFlare
+Make a DNS cname record pointing towards reseller.suble.io and make sure to proxy it
+
 ## Create server in WHMCS
 ![image](https://user-images.githubusercontent.com/71713670/132988758-d86e671f-bad1-4f68-8bd0-91750888e1c6.png)
 Fill out with dummy data.
