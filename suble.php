@@ -485,7 +485,6 @@ class HTTPRequester {
      * @return      HTTP-Response body or an empty string if the request fails or is empty
      */
     public static function HTTPPost($url, array $params, string $auth) {
-        $query = http_build_query(json_encode($params));
         $ch    = curl_init();
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         $headers = array('Authorization: Bearer '.$auth, 'Content-type: application/json');
@@ -504,18 +503,17 @@ class HTTPRequester {
      * @return      HTTP-Response body or an empty string if the request fails or is empty
      */
     public static function HTTPPut($url, array $params, string $auth) {
-        $query = \http_build_query($params);
-        $ch    = \curl_init();
-        \curl_setopt($ch, \CURLOPT_RETURNTRANSFER, true);
+        $ch    = curl_init();
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         $headers = array('Authorization: Bearer '.$auth, 'Content-type: application/json');
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
-        \curl_setopt($ch, \CURLOPT_URL, $url);
-        \curl_setopt($ch, \CURLOPT_CUSTOMREQUEST, 'PUT');
-        \curl_setopt($ch, \CURLOPT_POSTFIELDS, $query);
-        $response = \curl_exec($ch);
-        \curl_close($ch);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
+        $response = curl_exec($ch);
+        curl_close($ch);
         return $response;
     }
     /**
@@ -525,18 +523,17 @@ class HTTPRequester {
      * @return   HTTP-Response body or an empty string if the request fails or is empty
      */
     public static function HTTPDelete($url, array $params, string $auth) {
-        $query = \http_build_query($params);
-        $ch    = \curl_init();
-        \curl_setopt($ch, \CURLOPT_RETURNTRANSFER, true);
+        $ch    = curl_init();
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
         $headers = array('Authorization: Bearer '.$auth, 'Content-type: application/json');
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
-        \curl_setopt($ch, \CURLOPT_URL, $url);
-        \curl_setopt($ch, \CURLOPT_CUSTOMREQUEST, 'DELETE');
-        \curl_setopt($ch, \CURLOPT_POSTFIELDS, $query);
-        $response = \curl_exec($ch);
-        \curl_close($ch);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($params));
+        $response = curl_exec($ch);
+        curl_close($ch);
         return $response;
     }
 }
